@@ -92,41 +92,22 @@ export default function Trains() {
     }
   };
 
-  const downloadCSV = () => {
-    const headers = [
-      "Train Name",
-      "Train Number",
-      "Arrival Time",
-      "Departure Time",
-      "Status",
-      "Speed (km/h)",
-      "Traffic Density (%)",
-      "Delay (mins)",
-      "Platform"
-    ];
-
-    const rows = trains.map(t => [
-      `"${t.name}"`,
-      `"${t.trainNo}"`,
-      `"${t.arrival || ''}"`,
-      `"${t.departure || ''}"`,
-      `"${t.status || 'On Time'}"`,
-      t.speed || 0,
-      t.trafficDensity || 0,
-      t.delay || 0,
-      `"${t.platform || '1'}"`
-    ]);
-
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-    
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "train_information_export.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const downloadExcelReport = async () => {
+    try {
+      const res = await axios.get("http://localhost:5001/export-excel", {
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "train_traffic_report.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error("Error downloading report:", err);
+      alert("Failed to download Excel report");
+    }
   };
 
   return (
@@ -296,7 +277,7 @@ export default function Trains() {
           </h2>
 
           <button
-            onClick={downloadCSV}
+            onClick={downloadExcelReport}
             style={{
               background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
               border: "none",
@@ -312,7 +293,7 @@ export default function Trains() {
               fontSize: "13px"
             }}
           >
-            <FaFileExcel /> Download Excel (CSV)
+            <FaFileExcel /> Download Excel Report
           </button>
         </div>
 
